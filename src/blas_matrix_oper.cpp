@@ -2,19 +2,19 @@
 #include <gsl_cblas.h>
 #include <cstdio>
 #include <cstdlib>
-void gnn::mmMultiply(int nRowsA, 
+void gnn::mmMultiply(int nRowsA,
 					 int nColsA,
-					 const float *A, 
+					 const double *A,
 					 bool transA,
-					 int nRowsB, 
+					 int nRowsB,
 					 int nColsB,
-					 const float *B, 
+					 const double *B,
 					 bool transB,
-					 float *C,
-					 float alpha
+					 double *C,
+					 double alpha
 					 )
 {
-	// function pointer for BLAS routine that multiplies 2 T matrices 
+	// function pointer for BLAS routine that multiplies 2 T matrices
 	// Order 	Specifies row-major (C) or column-major (Fortran) data ordering.
 	// TransA 	Specifies whether to transpose matrix A.
 	// TransB 	Specifies whether to transpose matrix B.
@@ -36,7 +36,7 @@ void gnn::mmMultiply(int nRowsA,
 	int ldb = nColsB;
 	int ldc = N;
 
-	cblas_sgemm(CblasRowMajor,
+	cblas_dgemm(CblasRowMajor,
 		 transA ? CblasTrans : CblasNoTrans,
 		 transB ? CblasTrans : CblasNoTrans,
 		 M, N, K, alpha,
@@ -45,29 +45,28 @@ void gnn::mmMultiply(int nRowsA,
 		);
 }
 
-void gnn::mmSubtract(int nRowsA, 
+void gnn::mmSubtract(int nRowsA,
 					 int nColsA,
-					 const float *A,
-					 int nRowsB, 
+					 const double *A,
+					 int nRowsB,
 					 int nColsB,
-					 const float *B,
-					 float *C
+					 const double *B,
+					 double *C
 					 )
 {
-	
+
 	if(nRowsA != nRowsB &&
-	   nColsA != nColsB) 
+	   nColsA != nColsB)
 	{
 		fprintf(stderr, "Illegal matrix dimention\n");
 		exit(0);
 	}
-	
+
 	int N = nRowsA*nColsA;
-	
+
 	// y = x + ( - y )
 	// y = (-y) + x
-	cblas_scopy (N, A, 1, C, 1);
-	cblas_saxpy (N, -1, B, 1, C, 1);
+	cblas_dcopy (N, A, 1, C, 1);
+	cblas_daxpy (N, -1, B, 1, C, 1);
 }
-					
-					
+

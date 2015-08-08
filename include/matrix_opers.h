@@ -11,7 +11,7 @@
 		}\
 	 } while(0);
 namespace gnn {
-	
+
 	/*
 	* Multiplyes matrix A with matrix B and
 	* stores the result in C
@@ -28,16 +28,16 @@ namespace gnn {
 	* @param10 scale AB
 	*/
 
-	void mmMultiply(int nRowsA, 
+	void mmMultiply(int nRowsA,
 					int nColsA,
-					const float *A, 
+					const double *A,
 					bool transA,
-					int nRowsB, 
+					int nRowsB,
 					int nColsB,
-					const float *B, 
+					const double *B,
 					bool transB,
-					float *C,
-					float alpha
+					double *C,
+					double alpha
 					);
 
 	/*
@@ -51,17 +51,17 @@ namespace gnn {
 	* @param5 number of cols in matrix B
 	* @param6 matrix B
 	* @param7 result
-	* 
+	*
 	*/
-					
-	void mmSubtract(int nRowsA, 
+
+	void mmSubtract(int nRowsA,
 					int nColsA,
-					const float *A,
-					int nRowsB, 
+					const double *A,
+					int nRowsB,
 					int nColsB,
-					const float *B,
-					float *C
+					const double *B,
+					double *C
 					);
-	
+
 }
 #endif

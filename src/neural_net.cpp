@@ -4,27 +4,27 @@
 #include <cstdio>
 #include <cstdlib>
 /*
- * Allocate enough space to hold each output neuron 
+ * Allocate enough space to hold each output neuron
  * for each layer but the input
  *
  * @param1 definition
  * @param2 number of rows
  * @param3 add space for bias term
  *
- */ 
- 
-float **allocNeuronSlots(gnn::nnDef def, int nRows, bool addCol) 
-{ 
-	float **ns = new float*[def.nLayers-1];
+ */
+
+double **allocNeuronSlots(gnn::nnDef def, int nRows, bool addCol)
+{
+	double **ns = new double*[def.nLayers-1];
 	for(int i = 1 ; i < def.nLayers ; i++) {
 		int nCols = def.nodes(i) + addCol;
-		ns[i-1] = new float[nRows*nCols];
+		ns[i-1] = new double[nRows*nCols];
 	}
 	return ns;
 }
 
-void freeNeuronSlots(gnn::nnDef def, float **ns) 
-{ 
+void freeNeuronSlots(gnn::nnDef def, double **ns)
+{
 	for(int i = 0 ; i < def.nLayers - 1 ; i++) {
 		delete []ns[i];
 	}
@@ -43,11 +43,11 @@ void freeNeuronSlots(gnn::nnDef def, float **ns)
  * param3 with bias (1) term added
  */
 
-void computeActivations(const float *Z,
-						float *Activations, 
-						float *Ab,
+void computeActivations(const double *Z,
+						double *Activations,
+						double *Ab,
 						int ZNRows, int ZNCols
-						) 
+						)
 {
 	int nElems = ZNRows*ZNCols;
 	int AbNCols = ZNCols+1;
@@ -56,7 +56,7 @@ void computeActivations(const float *Z,
 		Ab[AbRow] = 1;
 		for(int j = 0 ; j < ZNCols ; j++) {
 			int elem = i*ZNCols + j;
-			float a = 1.0f / (1.0f + exp(-Z[elem]));
+			double a = 1.0f / (1.0f + exp(-Z[elem]));
 			Activations[elem] = a;
 			Ab[AbRow+j+1] = a;
 		}
@@ -65,7 +65,7 @@ void computeActivations(const float *Z,
 
 /*
  * @param1 definition
- * @param2 input layer 
+ * @param2 input layer
  * @param3 number of examples in input layer
  * @param4 weights associated with each layer ( n(layers) - 1 )
  * @param5 stroage for the activations for each of the layers ( n(layers) - 1 )
@@ -76,70 +76,70 @@ void computeActivations(const float *Z,
  * computes the activation of all layers and stores the result in
  * param param5
  */
-	 
+
 void gnn::feedForward(const nnDef &def,
-					  const float *inputLayer,
-					  const float **Weigths,
+					  const double *inputLayer,
+					  const double **Weigths,
 					  int inputLayerRows,
-					  float **Activations,
-					  float **ActivationsBias
+					  double **Activations,
+					  double **ActivationsBias
 					  )
 {
 	// Allocate enough space for n(layers)-1
-	float **Z = allocNeuronSlots(def, inputLayerRows, false);
-	
-	const float * Acurrent = inputLayer;
+	double **Z = allocNeuronSlots(def, inputLayerRows, false);
+
+	const double * Acurrent = inputLayer;
 	int aCurrentNRows = inputLayerRows;
-	
+
 	for(int i = 0 ; i < def.nLayers - 1 ; i++) {
-	
+
 		int aCurrentNCols = def.nodes(i) + 1;
 		int zNCols = def.nodes(i+1);
-		
+
 		mmMultiply(aCurrentNRows, aCurrentNCols,
 				   Acurrent, false,
 				   aCurrentNCols, zNCols,
 				   Weigths[i], false,
 				   Z[i], 1.0);
-		
-		computeActivations(Z[i], Activations[i], ActivationsBias[i], 
+
+		computeActivations(Z[i], Activations[i], ActivationsBias[i],
 						   inputLayerRows, zNCols
-						   );
-						   
+                            );
+
 		Acurrent = ActivationsBias[i];
 	}
-	
+
 	freeNeuronSlots(def, Z);
 }
 
 /*
  * @param1 definition
  * @param2 output layer activations
- * @param3 the class associated with each training example 
+ * @param3 the class associated with each training example
  *		   (! in the same layout as param2)
- * @param4 number of param2 in classes and param3 
+ * @param4 number of param2 in classes and param3
  *
  * @return the cost
- * 
+ *
  * computes the weighted sum of the difference between the predicted
  * values (param2) and the actual values (param3) using the function
  */
 
-float gnn::cost(const gnn::nnDef &def,
-				const float *outputLayers,
-				const float *classes,
+double gnn::cost(const gnn::nnDef &def,
+				const double *outputLayers,
+				const double *classes,
 				int outputLayerRows
 				)
 {
-	
+
 	int clCount = def.nodes(def.nLayers - 1);
 
-	float cost = 0.0f;
+	double cost = 0.0f;
 	for(int i = 0 ; i < outputLayerRows ; i++) {
 		for(int j = 0 ; j < clCount ; j++) {
 			int elem = i*clCount + j;
-			cost += 
-				-classes[elem] * log(outputLayers[elem]) 
+			cost +=
+				-classes[elem] * log(outputLayers[elem])
 				-(1.0 - classes[elem]) * log(1.0 - outputLayers[elem]);
 		}
 	}
@@ -148,7 +148,7 @@ float gnn::cost(const gnn::nnDef &def,
 
 /*
  * Computes the error associated with layer param2
- * 
+ *
  * if param2 != param1.nLayers-1
  *
  * delta = ( weight^T * delta_next ) .* sigmoid'
@@ -176,60 +176,60 @@ float gnn::cost(const gnn::nnDef &def,
 
 void computeDelta(const gnn::nnDef &def,
 				  int layer,
-				  const float *weight,
-				  const float *deltaNext,
-				  const float *activations,
-				  float *delta,
+				  const double *weight,
+				  const double *deltaNext,
+				  const double *activations,
+				  double *delta,
 				  int numOfRows
 				  )
 {
-	
+
 	if(0 > layer || layer >= def.nLayers) {
 		fprintf(stderr, "computeDelta: Invalid param2: %d\n", layer);
 		exit(1);
 	}
-	
+
 	int deltaNRows = numOfRows;
 	int deltaNCols = def.nodes(layer);
-	
+
 	if(layer == def.nLayers-1) {
 		gnn::mmSubtract(deltaNRows, deltaNCols, activations,
 						deltaNRows, deltaNCols, deltaNext,
 						delta );
 		return;
 	}
-	
-	float * work = new float[deltaNRows*(deltaNCols+1)];
-	
+
+	double * work = new double[deltaNRows*(deltaNCols+1)];
+
 	int deltaNextNRows = numOfRows;
 	int deltaNextNCols = def.nodes(layer+1);
-	
+
 	int weightsNRows = def.nodes(layer);
 	int weightsNCols = def.nodes(layer+1);
-	
+
 	gnn::mmMultiply(deltaNextNRows, deltaNextNCols,
 				    deltaNext, false,
 				    weightsNRows, weightsNCols,
 				    weight, true,
 				    work, 1.0 );
-	
+
 	for(int i = 0 ; i < deltaNRows ; i++) {
 		int row = i*deltaNCols;
 		int workRow = i*deltaNCols+1;
 		for(int j = 0 ; j < deltaNCols ; j++) {
 			int elem = row+j;
-			float val = work[workRow+j+1];
-			register float a = activations[elem];
+			double val = work[workRow+j+1];
+			register double a = activations[elem];
 			delta[elem] = val * a * ( 1 - a );
 		}
 	}
-	
+
 	delete []work;
 }
 
 /*
 * computes the gradient associated with each weight ( param4 ) and stores the
-* result in param4 using backpropagation 
+* result in param4 using backpropagation
 *
 * @param1 definition
 * @param2 computed activations for each layer including the training set ( n(layers) )
@@ -241,39 +241,39 @@ void computeDelta(const gnn::nnDef &def,
 */
 
 void gnn::backpropagate(const gnn::nnDef &def,
-					    const float **Activations,
-					    const float **ActivationsBias,
-					    const float *classes,
-					    const float **Weigths,
-					    float **Gradients,
+					    const double **Activations,
+					    const double **ActivationsBias,
+					    const double *classes,
+					    const double **Weigths,
+					    double **Gradients,
 					    int inputLayerRows
 					    )
 {
-	
+
 	int currentLayer = def.nLayers-1;
-	float *pDelta = new float[inputLayerRows*def.nodes(currentLayer)];
+	double *pDelta = new double[inputLayerRows*def.nodes(currentLayer)];
 	computeDelta(def, currentLayer, 0,
 				 classes, Activations[currentLayer],
 				 pDelta, inputLayerRows );
-				 
+
 	 for(; currentLayer >= 1 ; currentLayer--) {
-		
+
 		int cGrad = currentLayer-1;
-		float *Grad = Gradients[cGrad];
-		const float *cActB = ActivationsBias[cGrad];
+		double *Grad = Gradients[cGrad];
+		const double *cActB = ActivationsBias[cGrad];
 		int cActBNCols = def.nodes(cGrad)+1;
 
-		mmMultiply(inputLayerRows, 
+		mmMultiply(inputLayerRows,
 				   def.nodes(cGrad)+1,
-				   cActB, true, inputLayerRows, 
+				   cActB, true, inputLayerRows,
 				   def.nodes(currentLayer),
 				   pDelta, false, Grad,
 				   1.0f / inputLayerRows );
-		
+
 		if(currentLayer == 1) continue;
-		
-		float *nDelta = new float[inputLayerRows*def.nodes(cGrad)];
-		
+
+		double *nDelta = new double[inputLayerRows*def.nodes(cGrad)];
+
 		computeDelta(def, cGrad, Weigths[cGrad],
 					 pDelta, Activations[cGrad],
 					 nDelta, inputLayerRows );
@@ -281,23 +281,23 @@ void gnn::backpropagate(const gnn::nnDef &def,
 		delete []pDelta;
 		pDelta = nDelta;
 	 }
-	 
+
 	 delete []pDelta;
 }
 
 gnn::nnDef::nnDef(int nlay, const int* layn) :
-	nl(nlay), nLayers(nl), lc(new int[nl]) 
-{	
+	nl(nlay), nLayers(nl), lc(new int[nl])
+{
 	copy(layn);
 }
 
 gnn::nnDef::nnDef(const nnDef &def) :
-	nl(def.nl), nLayers(nl), lc(new int[nl]) 
+	nl(def.nl), nLayers(nl), lc(new int[nl])
 {
 	copy(def.lc);
 }
 
-gnn::nnDef& gnn::nnDef::operator=(const nnDef &def) 
+gnn::nnDef& gnn::nnDef::operator=(const nnDef &def)
 {
 	delete []lc;
 	nl = def.nl;
@@ -306,7 +306,7 @@ gnn::nnDef& gnn::nnDef::operator=(const nnDef &def)
 	return *this;
 }
 
-gnn::nnDef::~nnDef() 
+gnn::nnDef::~nnDef()
 {
 	delete []lc;
 }
@@ -318,7 +318,7 @@ void gnn::nnDef::copy(const int *layerNodes)
 	}
 }
 
-int gnn::nnDef::nodes(int l) const 
+int gnn::nnDef::nodes(int l) const
 {
 	if(0 > l || l >= nLayers) {
 		return -1;
