@@ -1,7 +1,8 @@
 #include "matrix_opers.h"
-#include <gsl_cblas.h>
+#include <gsl/gsl_cblas.h>
 #include <cstdio>
 #include <cstdlib>
+
 void gnn::mmMultiply(int nRowsA,
 					 int nColsA,
 					 const double *A,
